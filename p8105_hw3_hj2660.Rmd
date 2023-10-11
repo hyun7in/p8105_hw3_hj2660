@@ -8,6 +8,8 @@ output: github_document
 library(tidyverse)
 library(ggridges)
 library(patchwork)
+library(tidyr)
+library(leaflet)
 
 library(p8105.datasets)
 
@@ -92,4 +94,96 @@ instacart |>
 
 ## Problem 2
 
+First, import dataset.
+```{r}
+data("brfss_smart2010")
+```
+
+Do some data cleaning, with a specific focus on the `Overall Health` topic. Include only responses that are ordered from `Poor` to `Excellent`.
+```{r}
+brfss_df = brfss_smart2010 |>
+  janitor::clean_names() |>
+  filter(topic == "Overall Health" &
+         response %in% c("Excellent", "Very good", "Good", "Fair", "Poor"))
+
+ordered_brfss = brfss_df[order(factor(brfss_df$response, levels = c("Poor", "Fair", "Good", "Very good", "Excellent"))),]
+```
+
+
+```{r}
+states_2002 =
+  ordered_brfss |>
+  filter(year == "2002") |> 
+  group_by(locationabbr) |>
+  summarize(locations = n_distinct(locationdesc)) |>
+  filter(locations >= 7)
+```
+In 2002, there are `r nrow(states_2002)` states observed at 7 or more locations.
+
+
+```{r}
+states_2010 =
+  ordered_brfss |>
+  filter(year == "2010") |> 
+  group_by(locationabbr) |>
+  summarize(locations = n_distinct(locationdesc)) |>
+  filter(locations >= 7)
+```
+In 2010, there are `r nrow(states_2010)` states observed at 7 or more locations.
+
+Construct a dataset that only has "Excellent" responses and contains `year`, `state`, and average of the `data_value`. Then, make a plot.
+```{r}
+excl_brfss =
+  ordered_brfss |>
+  filter(response == "Excellent") |>
+  group_by(year, locationabbr) |>
+  mutate(avg_data = mean(data_value)) |>
+  select(year, locationabbr, avg_data)
+
+#Create the plot
+ggplot(excl_brfss, aes(x = year,
+                       y = avg_data,
+                       group = locationabbr,
+                       color = locationabbr)) +
+  geom_line(size = 1) + 
+  labs(title = "Average Data Value Over within a State (Excellent)",
+       x = "Year",
+       y = "Average Data Value",
+       color = "State") +
+  theme_minimal()
+```
+
+
+Make a two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State
+```{r}
+ny_df =
+  ordered_brfss |>
+  filter(locationabbr == "NY", year %in% c(2006, 2010))
+
+#Create a two-panel plot
+ggplot(ny_df, aes(x = data_value, fill = factor(response, levels = c("Poor", "Fair", "Good", "Very good", "Excellent")))) +
+  geom_histogram(binwidth = 0.5) +
+  facet_wrap(~year, nrow = 1) +
+  labs(
+    title = "Distribution of Data Value by Response in New York State (2006 and 2010)",
+    x = "Data Value",
+    y = "Frequency",
+    fill = "Response"
+  ) 
+```
+among locations?
+```{r}
+ny_df = ny_df |>
+  mutate(geo_location = gsub("[()]", "", geo_location)) |>
+  separate(geo_location, into = c("latitude", "longitude"), sep = ", ") |>
+  mutate(latitude = as.numeric(latitude), longitude = as.numeric(longitude)) |>
+  filter(locationabbr == "NY", year %in% c(2006, 2010)) 
+
+
+ny_df |>
+  leaflet() |>
+  addProviderTiles(providers$CartoDB.Positron) |>
+  addCircleMarkers(lat = ~latitude, lng = ~longitude, radius = 0.5)
+
+```
 
