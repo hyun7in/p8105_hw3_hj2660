@@ -6,22 +6,34 @@ output: github_document
 ---
 ```{r setup, include=FALSE}
 library(tidyverse)
-library(dplyr)
-library(ggplot2)
-library(knitr)
+library(ggridges)
+library(patchwork)
+
+library(p8105.datasets)
 
 knitr::opts_chunk$set(
-  fig.width = 6,
-  fig.asp = 0.6,
+  echo = TRUE,
+  warning = FALSE,
+  fig.width = 8,
+  fig.height = 6,
   out.width = "90%"
 )
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_color_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
 ```
 
 ## Problem 1
 
 First, load the data from the `p8105.datasets`
 ```{r}
-library(p8105.datasets)
 data(instacart)
 ```
 
@@ -77,5 +89,7 @@ instacart |>
   knitr::kable(digits = 2)
 ```
 
+
+## Problem 2
 
 
