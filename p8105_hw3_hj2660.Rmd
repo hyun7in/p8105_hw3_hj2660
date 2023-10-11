@@ -1,5 +1,81 @@
 ---
 title: "p8105_hw3_hj2660"
+author: "Hyun Jin Jung"
+date: "2023-10-14"
 output: github_document
 ---
+```{r setup, include=FALSE}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(knitr)
+
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = 0.6,
+  out.width = "90%"
+)
+```
+
+## Problem 1
+
+First, load the data from the `p8105.datasets`
+```{r}
+library(p8105.datasets)
+data(instacart)
+```
+
+
+The dataset includes `r nrow(instacart)` observations and `r ncol(instacart)` variables. Some of the key variables in the dataset include `order_id`, `product_id`, `user_id`, `aisle_id`, `department_id`, `product_name`, `order_dow`, and `order_hour_of_day`. One illustrative example is `r instacart[1,]$product_name` (Product ID: `r instacart[1,]$product_id`) found in the `r instacart[1,]$aisle` aisle in `r instacart[1,]$department` department. This product was purchased by the User ID: `r instacart[1,]$user_id` on the `r instacart[1,]$order_dow`th day of the week at `r instacart[1,]$order_hour_of_day`AM. It has been `r instacart[1,]$days_since_prior_order` days since prior order.
+
+
+- How many aisles are there, and which aisles are the most items ordered from?
+
+```{r}
+instacart_aisle = instacart |>
+  group_by(aisle) |>
+  summarize(n_orders = n()) |>
+  arrange(desc(n_orders))
+```
+
+There are `r nrow(instacart_aisle)` aisles. The aisle with the most items ordered is "`r instacart_aisle$aisle[1]`" with `r instacart_aisle$n_orders[1]` items.
+
+- Make a plot that shows the number of items ordered in each aisle, limiting this to aisles with more than 10000 items ordered. Arrange aisles sensibly, and organize your plot so others can read it.
+
+```{r}
+instacart |>
+  count(aisle) |>
+  filter(n > 10000) |>
+  mutate(aisle = fct_reorder(aisle, n)) |>
+  ggplot(aes(x = aisle, y = n)) +
+  geom_point() +
+  labs(title = "Number of items ordered in each aisle") +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1))
+```
+
+- Make a table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits”. Include the number of times each item is ordered in your table.
+```{r}
+instacart |>
+  filter(aisle %in% c("baking ingredients", "dog food care", "packaged vegetables fruits")) |>
+  group_by(aisle) |>
+  count(product_name) |>
+  mutate(rank = min_rank(desc(n))) |>
+  filter(rank < 4) |>
+  arrange(desc(n)) |>
+  knitr::kable()
+```
+
+- Make a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week; format this table for human readers (i.e. produce a 2 x 7 table).
+```{r}
+instacart |>
+  filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) |>
+  group_by(product_name, order_dow) |>
+  summarize(mean_hour = mean(order_hour_of_day)) |>
+  pivot_wider(
+    names_from = order_dow,
+    values_from = mean_hour) |>
+  knitr::kable(digits = 2)
+```
+
+
 
