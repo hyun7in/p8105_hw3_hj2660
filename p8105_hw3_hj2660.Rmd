@@ -166,7 +166,7 @@ brfss_df |>
        color = "County") +
   theme_minimal()
 ```
-
+comment:
 
 ## Problem 3
 Your final dataset should include all originally observed variables; exclude participants less than 21 years of age, and those with missing demographic data; and encode data with reasonable variable classes (i.e. not numeric, and using factors with the ordering of tables and plots in mind).
@@ -180,7 +180,8 @@ covar_df =
     education = recode(education, "1" = "Less than high school", "2" = "High school equivalent", "3" = "More than high school")) |>
   mutate(
     sex = factor(sex), education = factor(education)) |>
-  filter(age >= 21)
+  filter(age >= 21) |>
+  drop_na()
 
 #Import and tidy accelerometer info
 accel_df =
