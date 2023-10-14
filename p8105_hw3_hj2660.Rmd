@@ -223,7 +223,7 @@ The boxplot shows the distributions of age for both `female` and `male` groups w
 
 
 
-```{r, warning=FALSE}
+```{r, message = FALSE}
 plot2_nhanes = merged_nhanes |>
   mutate(total_activity = rowSums(select(merged_nhanes, starts_with("min"))))
 
@@ -246,7 +246,7 @@ In the `Less than high school` category, individuals appear to be very active in
 For those in the `More than high school` category, males trend maintain relatively stable activity levels until their age 50, followed by a slight increase in their 50s and a gradual decline by age 80. Females, on the other hand, exhibit their highest activity levels during their early 20s and 40s to 50s and experience reduced activity from their 60s to 80s.
 
 
-```{r, warning=FALSE}
+```{r, message = FALSE}
 plot3_nhanes = merged_nhanes |>
   group_by(education, sex) |>
   summarize(across(starts_with("min"), ~mean(.), .names = "mean_{.col}")) |>
