@@ -115,7 +115,7 @@ states_2002 =
   filter(locations >= 7)
 kable(states_2002, col.names = c("States", "Number of Locations"))
 ```
-In 2002, there are `r nrow(states_2002)` states observed at 7 or more locations. 
+In 2002, as shown in the table above, there are `r nrow(states_2002)` states observed at 7 or more locations. 
 
 
 ```{r}
@@ -127,8 +127,7 @@ states_2010 =
   filter(locations >= 7) 
 kable(states_2010, col.names = c("States", "Number of Locations"))
 ```
-In 2010, there are `r nrow(states_2010)` states observed at 7 or more locations.
-
+In 2010, as shown in the table above, there are `r nrow(states_2010)` states observed at 7 or more locations. 
 
 ```{r}
 excl_brfss =
@@ -150,10 +149,10 @@ ggplot(excl_brfss, aes(x = year,
        color = "State") +
   theme_minimal()
 ```
+
 This spaghetti plot shows the average data value over time within each state, limited to the response "Excellent". There are a total of `r length(unique(excl_brfss$locationabbr))` states observed. To make the plot more readable, the legends indicating `State` have been placed on the side of the plot, with the x-axis representing the `Year`, and the y-axis representing the `Mean Value`.
 
 
-Make a two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State
 ```{r}
 brfss_df |>
   filter(locationabbr == "NY", year %in% c(2006, 2010)) |>
@@ -169,10 +168,12 @@ brfss_df |>
        color = "County") +
   theme_minimal()
 ```
-comment:
+
+A two-panel plot shows the data of years 2006 and 2010, illustrating distribution of `data_value` for responses ranging from “Poor” to “Excellent” among locations in New York State. In both years, the `Good` response group exhibited the highest `Data Value`, followed by the `Very good` response group as the second highest, with `Excellent` ranking the third. The response group `Poor` exhibited the lowest data values, with data points falling below 10, followed by the `Fair` response group, which had values below 20. The medians for each response group were observed to be similar, while `Fair` and `Very good` groups, the data value range for the year `2010` appeared to be larger. Additionally, each county within the New York State has been represented using `geom_point` on the plot.
+
 
 ## Problem 3
-Your final dataset should include all originally observed variables; exclude participants less than 21 years of age, and those with missing demographic data; and encode data with reasonable variable classes (i.e. not numeric, and using factors with the ordering of tables and plots in mind).
+
 ```{r}
 #Import and tidy covariate info
 covar_df =
@@ -194,19 +195,21 @@ accel_df =
 #combine two datasets
 merged_nhanes = merge(covar_df, accel_df, by = "seqn")
 ```
+First, import `nhanes_covar.csv` and skip the first 4 rows. Next, use `clean_names` to combine it with `nhanes_accel.csv`. Recode `sex` and `education` and convert these variables into categorical factors using the `factor` function. Exclude participants less than 21 years of age and filter out those with missing demographic data using `drop_na`. Then, import `nhanes_accel.csv` and use `clean_names` to combine the two datasets based on `seqn`.
 
 
-Table for the number of men and women in each education category
+**Table for the number of men and women in each education category**
 ```{r}
 gender_edu = merged_nhanes |>
   group_by(sex, education) |>
   summarize(count = n(), .groups = "drop") |>
   pivot_wider(names_from = sex, values_from = count)
 kable(gender_edu,
-      title = "Number of Men and Women in each Education Category")
+      caption = "Number of Men and Women in each Education Category")
 ```
+This table shows the gender distribution within different education categories. It shows gender disparities in `High school equivalent` category, with more males (`r sum(with(merged_nhanes, sex == "male" & education == "High school equivalent"))`) than the females (`r sum(with(merged_nhanes, sex == "female" & education == "High school equivalent"))`), while the other two categories seems to be balanced.
 
-Visualization of the age distributions for men and women in each education category.
+**Visualization of the age distributions for men and women in each education category**
 ```{r}
 ggplot(merged_nhanes, aes(x = education, y = age, fill = sex)) +
   geom_boxplot(alpha = 0.3) +
@@ -216,9 +219,11 @@ ggplot(merged_nhanes, aes(x = education, y = age, fill = sex)) +
   theme_minimal()
 ```
 
+The boxplot shows the distributions of age for both `female` and `male` groups within different education categories: `r unique(merged_nhanes$education)`. By separating them into education levels, it allows for clear comparisons of age distributions. The median age of females (`r median(merged_nhanes$age[merged_nhanes$sex == "female" & merged_nhanes$education == "High school equivalent"])`) is greater than the median age of males (`r median(merged_nhanes$age[merged_nhanes$sex == "male" & merged_nhanes$education == "High school equivalent"])`) in `High school equivalent` category. In both groups, the median age seems to be similar in the `Less than highschool` category. In the `More than high school` category, the median age of males is slightly greater than that of females. Additionally, the median age for both females and males in the `More than high school` category is observed to be much lower (female:`r median(merged_nhanes$age[merged_nhanes$sex == "female" & merged_nhanes$education == "More than high school"])`, male:`r median(merged_nhanes$age[merged_nhanes$sex == "male" & merged_nhanes$education == "More than high school"])`) than in the other two groups. 
 
-Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate across minutes to create a total activity variable for each participant. Plot these total activities (y-axis) against age (x-axis); your plot should compare men to women and have separate panels for each education level. Include a trend line or a smooth to illustrate differences. Comment on your plot.
-```{r}
+
+
+```{r, warning=FALSE}
 plot2_nhanes = merged_nhanes |>
   mutate(total_activity = rowSums(select(merged_nhanes, starts_with("min"))))
 
@@ -232,10 +237,16 @@ ggplot(plot2_nhanes, aes(x = age, y = total_activity, color = sex)) +
        x = "Age")
 ```
 
+The accelerometer data focus on the total activity over the day. First, a new column `total_activity` is created by summing the values in rows from min1 to min1440. This way, the total daily activity is aggregated. The `Total activity` is then used as the y-axis while `Age` is used as x-axis. The `geom_point` function is used to create a scatter plot to compare men to women, and `facet_wrap` is employed to make separate panels for each education level. Additionally, a trend line is added using `geom_smooth`. 
 
-Accelerometer data allows the inspection activity over the course of the day. Make a three-panel plot that shows the 24-hour activity time courses for each education level and use color to indicate sex. Describe in words any patterns or conclusions you can make based on this graph; including smooth trends may help identify differences.
+The total activity of each individual exhibits distinct trends based on their educational background and age. In the `High school equivalent` category, total activity reaches its peak during the late 30s to early 40s and gradually decreases by age 60. Among females, activity levels rise again and peaks in their 70s then decreases, while remain consistent for males. 
 
-```{r}
+In the `Less than high school` category, individuals appear to be very active in their 20s, decline by age 50 and there is an interesting resurgence in activity during their 50s, and then decline in their 60s to 80s. 
+
+For those in the `More than high school` category, males trend maintain relatively stable activity levels until their age 50, followed by a slight increase in their 50s and a gradual decline by age 80. Females, on the other hand, exhibit their highest activity levels during their early 20s and 40s to 50s and experience reduced activity from their 60s to 80s.
+
+
+```{r, warning=FALSE}
 plot3_nhanes = merged_nhanes |>
   group_by(education, sex) |>
   summarize(across(starts_with("min"), ~mean(.), .names = "mean_{.col}")) |>
@@ -243,14 +254,19 @@ plot3_nhanes = merged_nhanes |>
   mutate(time = substring(time, 9),
          time = as.numeric(time))
   
-  
+#Make a plot
 ggplot(plot3_nhanes, aes(x = time, y = mean, color = sex)) +
   geom_point(alpha = 0.1) +
   facet_wrap(~education) +
   geom_smooth() +
-  labs(title = "24-hour Activity by Age and Education",
+  labs(title = "24-hour Activity by Education and Sex",
        y = "Mean Value of Activity",
        x = "Time(min)",
        color = "Sex")
 ```
 
+First, grouped the data by education and sex. Then calculated the mean value for columns that starts with "min" within each education and gender group. Then, transformed the data to a long format. To make the plot, processed the `time` column to extract and convert numeric values. 
+
+With `geom_point` function, added points to the plot with reduced opacity using `alpha = 0.1` for better visualization. Used `facet_wrap` function to separate panels for each education categories. `geom_smooth` has been used to add a smooth trend line to the plot to visualize trends in the data. 
+
+The plot provides insights into 24-hour activity patterns and allows us to compare different education categories and genders. In all three education categories, females tend to have higher `Mean Value of Activity` during the day, while males tend to be slightly more active from 0 minutes to the 250-minute time frame. The trends appear similar in all three groups, peaking during the daytime and gradually declining to the 250-minute mark, which corresponds to the late evening and early morning hours when people typically wind down their day.
